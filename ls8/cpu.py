@@ -37,6 +37,7 @@ class CPU:
         ]
 
         for instruction in program:
+            print("Instruction: ", instruction)
             self.ram[address] = instruction
             address += 1
 
@@ -77,4 +78,25 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        running = True
+
+        while running:
+            ir = self.ram[self.pc]
+            operand_a = self.ram_read(self.pc+1)
+            operand_b = self.ram_read(self.pc+2)
+
+            if ir == 0b10000010:
+                self.register[operand_a] = operand_b
+                self.pc += 3
+
+            elif ir == 0b01000111:
+                print(self.register[operand_a])
+                self.pc += 1
+            
+            elif ir == 0b00000001:
+                running = False
+                self.pc += 1
+            
+            else:
+                print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
+                sys.exit(1)
