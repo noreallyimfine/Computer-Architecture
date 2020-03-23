@@ -1,6 +1,14 @@
-"""CPU functionality."""
+"""CPU functionality.
+
+Constructor method not filled out. 
+Load method filled out and straight forward from Monday class
+Alu method ADD completed, needs the rest of the mathematical operations
+Trace method filled out so print out cpu state, useful for debugging
+Run method to be completed, will run the program from load
+"""
 
 import sys
+
 
 class CPU:
     """Main CPU class."""
