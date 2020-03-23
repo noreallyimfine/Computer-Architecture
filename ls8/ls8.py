@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-"""Main."""
+"""Main.
+
+Runs the program in the cpu class
+"""
 
 import sys
 from cpu import *
