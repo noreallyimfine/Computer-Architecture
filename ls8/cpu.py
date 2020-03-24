@@ -7,6 +7,13 @@ Trace method filled out so print out cpu state, useful for debugging
 Run method to be completed, will run the program from load
 """
 
+
+## QUESTIONS FOR MATT
+    # did I initialize ram and register correctly? 
+    # Should HLT be a class variable?
+    # Why do we need to convert into an int?
+## END QUESTIONS
+
 import sys
 
 
@@ -21,32 +28,50 @@ class CPU:
         self.register = [0] * 8
         self.pc = 0
 
-    # def load(self):
-    #     if len(sys.argv) < 2:
-    #         print("No instructions to read.")
-    #         sys.exit(1)
-    #     f = sys.argv[1]
-
     def load(self):
-        """load a program into memory."""
+        if len(sys.argv) < 2:
+            print("Usage: pass filename as argument.")
+            sys.exit(1)
 
-        address = 0
+        filename = sys.argv[1]
+        index = 0
+        try:
+            with open(filename) as f:
 
-        # for now, we've just hardcoded a program:
+                for line in f:
+                    command = line.split("#")[0].strip()
+                    print(f"Line {index}: Command {command}")
+                    index += 1
+                    if command == "":
+                        continue
 
-        program = [
-            # from print8.ls8
-            0b10000010,  # ldi r0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # prn r0
-            0b00000000,
-            CPU.HLT
-        ]
+                    num = int(command, 2)
+                    self.ram[index] = num
+                    print(self.ram)
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        except FileNotFoundError:
+            print("File not found.")
+
+    # def load(self):
+    #     """load a program into memory."""
+
+    #     address = 0
+
+    #     # for now, we've just hardcoded a program:
+
+    #     program = [
+    #         # from print8.ls8
+    #         0b10000010,  # ldi r0,8
+    #         0b00000000,
+    #         0b00001000,
+    #         0b01000111,  # prn r0
+    #         0b00000000,
+    #         CPU.HLT
+    #     ]
+
+    #     for instruction in program:
+    #         self.ram[address] = instruction
+    #         address += 1
 
     def ram_read(self, index):
         return self.ram[index]
