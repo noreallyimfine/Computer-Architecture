@@ -13,31 +13,38 @@ import sys
 class CPU:
     """Main CPU class."""
 
+    HLT = 0b00000001
+
     def __init__(self):
         """Construct a new CPU."""
         self.ram = [0] * 8
         self.register = [0] * 8
         self.pc = 0
 
+    # def load(self):
+    #     if len(sys.argv) < 2:
+    #         print("No instructions to read.")
+    #         sys.exit(1)
+    #     f = sys.argv[1]
+
     def load(self):
-        """Load a program into memory."""
+        """load a program into memory."""
 
         address = 0
 
-        # For now, we've just hardcoded a program:
+        # for now, we've just hardcoded a program:
 
         program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
+            # from print8.ls8
+            0b10000010,  # ldi r0,8
             0b00000000,
             0b00001000,
-            0b01000111,  # PRN R0
+            0b01000111,  # prn r0
             0b00000000,
-            0b00000001,  # HLT
+            CPU.HLT
         ]
 
         for instruction in program:
-            print("Instruction: ", instruction)
             self.ram[address] = instruction
             address += 1
 
@@ -52,7 +59,7 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        # elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -64,8 +71,8 @@ class CPU:
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
             self.pc,
-            #self.fl,
-            #self.ie,
+            # self.fl,
+            # self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
             self.ram_read(self.pc + 2)
@@ -91,12 +98,11 @@ class CPU:
 
             elif ir == 0b01000111:
                 print(self.register[operand_a])
-                self.pc += 1
-            
+                self.pc += 2
+
             elif ir == 0b00000001:
                 running = False
-                self.pc += 1
-            
+
             else:
                 print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
                 sys.exit(1)
