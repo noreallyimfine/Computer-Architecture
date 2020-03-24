@@ -24,54 +24,55 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        self.ram = [0] * 8
+        self.ram = [0] * 256
         self.register = [0] * 8
         self.pc = 0
 
-    def load(self):
-        if len(sys.argv) < 2:
-            print("Usage: pass filename as argument.")
-            sys.exit(1)
-
-        filename = sys.argv[1]
-        index = 0
-        try:
-            with open(filename) as f:
-
-                for line in f:
-                    command = line.split("#")[0].strip()
-                    print(f"Line {index}: Command {command}")
-                    index += 1
-                    if command == "":
-                        continue
-
-                    num = int(command, 2)
-                    self.ram[index] = num
-                    print(self.ram)
-
-        except FileNotFoundError:
-            print("File not found.")
-
     # def load(self):
-    #     """load a program into memory."""
+    #     if len(sys.argv) < 2:
+    #         print("Usage: pass filename as argument.")
+    #         sys.exit(1)
 
-    #     address = 0
+    #     filename = sys.argv[1]
+    #     index = 0
+    #     try:
+    #         with open(filename) as f:
 
-    #     # for now, we've just hardcoded a program:
+    #             for line in f:
+    #                 command = line.split("#")[0].strip()
+    #                 print(f"Line {index}: Command {command}")
+    #                 if command == "":
+    #                     continue
 
-    #     program = [
-    #         # from print8.ls8
-    #         0b10000010,  # ldi r0,8
-    #         0b00000000,
-    #         0b00001000,
-    #         0b01000111,  # prn r0
-    #         0b00000000,
-    #         CPU.HLT
-    #     ]
+    #                 num = int(command, 2)
+    #                 print("Value - ", num)
+    #                 self.ram[index] = num
+    #                 print(self.ram)
+    #                 index += 1
 
-    #     for instruction in program:
-    #         self.ram[address] = instruction
-    #         address += 1
+    #     except FileNotFoundError:
+    #         print("File not found.")
+
+    def load(self):
+        """load a program into memory."""
+
+        address = 0
+
+        # for now, we've just hardcoded a program:
+
+        program = [
+            # from print8.ls8
+            0b10000010,  # ldi r0,8
+            0b00000000,
+            0b00001000,
+            0b01000111,  # prn r0
+            0b00000000,
+            CPU.HLT
+        ]
+
+        for instruction in program:
+            self.ram[address] = instruction
+            address += 1
 
     def ram_read(self, index):
         return self.ram[index]
