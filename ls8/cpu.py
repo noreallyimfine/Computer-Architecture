@@ -21,6 +21,8 @@ class CPU:
     """Main CPU class."""
 
     HLT = 0b00000001
+    PRN = 0b01000111
+    LDI = 0b10000010
 
     def __init__(self):
         """Construct a new CPU."""
@@ -28,51 +30,48 @@ class CPU:
         self.register = [0] * 8
         self.pc = 0
 
-    # def load(self):
-    #     if len(sys.argv) < 2:
-    #         print("Usage: pass filename as argument.")
-    #         sys.exit(1)
-
-    #     filename = sys.argv[1]
-    #     index = 0
-    #     try:
-    #         with open(filename) as f:
-
-    #             for line in f:
-    #                 command = line.split("#")[0].strip()
-    #                 print(f"Line {index}: Command {command}")
-    #                 if command == "":
-    #                     continue
-
-    #                 num = int(command, 2)
-    #                 print("Value - ", num)
-    #                 self.ram[index] = num
-    #                 print(self.ram)
-    #                 index += 1
-
-    #     except FileNotFoundError:
-    #         print("File not found.")
-
     def load(self):
-        """load a program into memory."""
+        if len(sys.argv) < 2:
+            print("Usage: ls8.py filename")
+            sys.exit(1)
 
-        address = 0
+        filename = sys.argv[1]
+        index = 0
+        try:
+            with open(filename) as f:
 
-        # for now, we've just hardcoded a program:
+                for line in f:
+                    command = line.split("#")[0].strip()
+                    if command == "":
+                        continue
 
-        program = [
-            # from print8.ls8
-            0b10000010,  # ldi r0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # prn r0
-            0b00000000,
-            CPU.HLT
-        ]
+                    num = int(command, 2)
+                    self.ram[index] = num
+                    index += 1
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        except FileNotFoundError:
+            print("File not found.")
+
+    # def load(self):
+    #     """load a program into memory."""
+
+    #     address = 0
+
+    #     # for now, we've just hardcoded a program:
+
+    #     program = [
+    #         # from print8.ls8
+    #         0b10000010,  # ldi r0,8
+    #         0b00000000,
+    #         0b00001000,
+    #         0b01000111,  # prn r0
+    #         0b00000000,
+    #         CPU.HLT
+    #     ]
+
+    #     for instruction in program:
+    #         self.ram[address] = instruction
+    #         address += 1
 
     def ram_read(self, index):
         return self.ram[index]
@@ -86,6 +85,8 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -118,15 +119,15 @@ class CPU:
             operand_a = self.ram_read(self.pc+1)
             operand_b = self.ram_read(self.pc+2)
 
-            if ir == 0b10000010:
+            if ir == CPU.LDI:
                 self.register[operand_a] = operand_b
                 self.pc += 3
 
-            elif ir == 0b01000111:
+            elif ir == CPU.PRN:
                 print(self.register[operand_a])
                 self.pc += 2
 
-            elif ir == 0b00000001:
+            elif ir == CPU.HLT:
                 running = False
 
             else:
