@@ -20,6 +20,7 @@ import sys
 class CPU:
     """Main CPU class."""
 
+    SP = 7
     # OP codes
     HLT = 0b00000001
     PRN = 0b01000111
@@ -37,7 +38,7 @@ class CPU:
 
         # Insert OP codes into branchtable
         # Values point to f(x) for carrying out OP code
-        self.branctable[CPU.PRN] = self._handle_prn
+        self.branchtable[CPU.PRN] = self._handle_prn
         self.branchtable[CPU.LDI] = self._handle_ldi
 
     def load(self):
@@ -73,6 +74,12 @@ class CPU:
     def _handle_ldi(self, reg_a, reg_b):
         self.register[reg_a] = reg_b
         self.pc += 3
+
+    def _handle_push(self, reg_a):
+        self.ram[self.register[SP]] 
+
+    def _handle_pop(self, reg_a):
+        pass
 
     def ram_read(self, index):
         return self.ram[index]
@@ -132,6 +139,22 @@ class CPU:
 
             elif ir == CPU.HLT:
                 running = False
+            
+            elif ir == CPU.PUSH:
+                val = self.register[operand_a]
+                # print("Val: ", val)
+                self.register[CPU.SP] -= 1
+                # print("Value in register at SP", self.register[CPU.SP])
+                # print("Value in RAM before pushing:", self.ram[self.register[CPU.SP]])
+                self.ram[self.register[CPU.SP]] = val
+                self.pc += 2
+            
+            elif ir == CPU.POP:
+                val = self.ram[self.register[CPU.SP]]
+                # print("Val", val)
+                self.register[operand_a] = val
+                self.register[CPU.SP] += 1
+                self.pc += 2
 
             else:
                 print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
