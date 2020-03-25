@@ -20,16 +20,25 @@ import sys
 class CPU:
     """Main CPU class."""
 
+    # OP codes
     HLT = 0b00000001
     PRN = 0b01000111
     LDI = 0b10000010
     MUL = 0b10100010
+    PUSH = 0b01000101
+    POP = 0b01000110
 
     def __init__(self):
         """Construct a new CPU."""
         self.ram = [0] * 256
         self.register = [0] * 8
         self.pc = 0
+        self.branchtable = {}
+
+        # Insert OP codes into branchtable
+        # Values point to f(x) for carrying out OP code
+        self.branctable[CPU.PRN] = self._handle_prn
+        self.branchtable[CPU.LDI] = self._handle_ldi
 
     def load(self):
         if len(sys.argv) < 2:
@@ -53,26 +62,17 @@ class CPU:
         except FileNotFoundError:
             print("File not found.")
 
-    # def load(self):
-    #     """load a program into memory."""
+    # def handle_hlt(self, running):
+    #     running = False
+    #     return running
 
-    #     address = 0
+    def _handle_prn(self, op_a):
+        print(self.register[op_a])
+        self.pc += 2
 
-    #     # for now, we've just hardcoded a program:
-
-    #     program = [
-    #         # from print8.ls8
-    #         0b10000010,  # ldi r0,8
-    #         0b00000000,
-    #         0b00001000,
-    #         0b01000111,  # prn r0
-    #         0b00000000,
-    #         CPU.HLT
-    #     ]
-
-    #     for instruction in program:
-    #         self.ram[address] = instruction
-    #         address += 1
+    def _handle_ldi(self, reg_a, reg_b):
+        self.register[reg_a] = reg_b
+        self.pc += 3
 
     def ram_read(self, index):
         return self.ram[index]
@@ -86,7 +86,7 @@ class CPU:
         if op == "ADD":
             self.register[reg_a] += self.register[reg_b]
         # elif op == "SUB": etc
-        elif op == "MUL":
+        elif op == CPU.MUL:
             self.register[reg_a] *= self.register[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
@@ -116,25 +116,18 @@ class CPU:
         running = True
 
         while running:
-            # print("RAM: ", self.ram)
             ir = self.ram[self.pc]
-            # print("IR: ", ir)
-            # print("PC: ", self.pc)
-            # print("Register: ", self.register)
-            # print("==============================")
             operand_a = self.ram_read(self.pc+1)
             operand_b = self.ram_read(self.pc+2)
 
             if ir == CPU.LDI:
-                self.register[operand_a] = operand_b
-                self.pc += 3
+                self._handle_ldi(operand_a, operand_b)
 
             elif ir == CPU.PRN:
-                print(self.register[operand_a])
-                self.pc += 2
-            
+                self._handle_prn(operand_a)
+
             elif ir == CPU.MUL:
-                self.alu("MUL", operand_a, operand_b)
+                self.alu(CPU.MUL, operand_a, operand_b)
                 self.pc += 3
 
             elif ir == CPU.HLT:
