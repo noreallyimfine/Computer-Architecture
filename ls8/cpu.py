@@ -135,63 +135,63 @@ class CPU:
 
         print()
 
-    def run(self):
-        """Run the CPU."""
-        running = True
-
-        while running:
-            ir = self.ram[self.pc]
-
-            print("PC:", self.pc)
-            print("IR:", ir)
-            print("Program: ", self.ram[:32])
-            print("Stack:", self.ram[240:])
-            print("Register:", self.register)
-            
-            try:
-                print(self.branchtable[ir]())
-                output = self.branchtable[ir]()
-                self.pc += output[0]
-                running = output[1]
-            
-            except KeyError:
-                print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
-                sys.exit(1)
-
     # def run(self):
     #     """Run the CPU."""
     #     running = True
 
     #     while running:
     #         ir = self.ram[self.pc]
-    #         operand_a = self.ram_read(self.pc+1)
-    #         operand_b = self.ram_read(self.pc+2)
 
-    #         if ir == CPU.LDI:
-    #             self._handle_ldi(operand_a, operand_b)
-
-    #         elif ir == CPU.PRN:
-    #             self._handle_prn(operand_a)
-
-    #         elif ir == CPU.MUL:
-    #             self.alu(CPU.MUL, operand_a, operand_b)
-    #             self.pc += 3
-
-    #         elif ir == CPU.HLT:
-    #             running = False
+    #         print("PC:", self.pc)
+    #         print("IR:", ir)
+    #         print("Program: ", self.ram[:32])
+    #         print("Stack:", self.ram[240:])
+    #         print("Register:", self.register)
             
-    #         elif ir == CPU.PUSH:
-    #             val = self.register[operand_a]
-    #             self.register[CPU.SP] -= 1
-    #             self.ram[self.register[CPU.SP]] = val
-    #             self.pc += 2
+    #         try:
+    #             print(self.branchtable[ir]())
+    #             output = self.branchtable[ir]()
+    #             self.pc += output[0]
+    #             running = output[1]
             
-    #         elif ir == CPU.POP:
-    #             val = self.ram[self.register[CPU.SP]]
-    #             self.register[operand_a] = val
-    #             self.register[CPU.SP] += 1
-    #             self.pc += 2
-
-    #         else:
+    #         except KeyError:
     #             print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
     #             sys.exit(1)
+
+    def run(self):
+        """Run the CPU."""
+        running = True
+
+        while running:
+            ir = self.ram[self.pc]
+            operand_a = self.ram_read(self.pc+1)
+            operand_b = self.ram_read(self.pc+2)
+
+            if ir == CPU.LDI:
+                self._handle_ldi(operand_a, operand_b)
+
+            elif ir == CPU.PRN:
+                self._handle_prn(operand_a)
+
+            elif ir == CPU.MUL:
+                self.alu(CPU.MUL, operand_a, operand_b)
+                self.pc += 3
+
+            elif ir == CPU.HLT:
+                running = False
+            
+            elif ir == CPU.PUSH:
+                val = self.register[operand_a]
+                self.register[CPU.SP] -= 1
+                self.ram[self.register[CPU.SP]] = val
+                self.pc += 2
+            
+            elif ir == CPU.POP:
+                val = self.ram[self.register[CPU.SP]]
+                self.register[operand_a] = val
+                self.register[CPU.SP] += 1
+                self.pc += 2
+
+            else:
+                print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
+                sys.exit(1)
