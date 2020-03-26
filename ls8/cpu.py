@@ -31,7 +31,6 @@ class CPU:
     ADD = 0b10100000
     CALL = 0b01010000
     RET = 0b00010001
-    # MULT2PRINT = 0b00011000
 
     def __init__(self):
         """Construct a new CPU."""
