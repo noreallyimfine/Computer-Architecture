@@ -28,6 +28,10 @@ class CPU:
     MUL = 0b10100010
     PUSH = 0b01000101
     POP = 0b01000110
+    ADD = 0b10100000
+    CALL = 0b01010000
+    RET = 0b00010001
+    # MULT2PRINT = 0b00011000
 
     def __init__(self):
         """Construct a new CPU."""
@@ -42,6 +46,9 @@ class CPU:
         self.branchtable[CPU.LDI] = self._handle_ldi
         self.branchtable[CPU.PUSH] = self._handle_push
         self.branchtable[CPU.POP] = self._handle_pop
+        self.branchtable[CPU.HLT] = self._handle_hlt
+        self.branchtable[CPU.CALL] = self._handle_call
+        self.branchtable[CPU.RET] = self._handle_ret
 
     def load(self):
         if len(sys.argv) < 2:
@@ -65,29 +72,32 @@ class CPU:
         except FileNotFoundError:
             print("File not found.")
 
-    def handle_hlt(self):
-        return (0, False)  
+    def _handle_hlt(self):
+        return (self.pc, False)  
 
     def _handle_prn(self):
         reg_a = self.ram_read(self.pc + 1)
         print(self.register[reg_a])
-        return (2, True)
+        self.pc += 2
+        return (self.pc, True)
 
     def _handle_ldi(self):
         reg_a = self.ram_read(self.pc + 1)
         reg_b = self.ram_read(self.pc + 2)
-        print(f"reg_a {reg_a}, reg_b {reg_b}")
+        # print(f"reg_a {reg_a}, reg_b {reg_b}")
         self.register[reg_a] = reg_b
-        return (3, True)
+        self.pc += 3
+        return (self.pc, True)
 
     def _handle_push(self):
         reg_a = self.ram_read(self.pc + 1)
         val = self.register[reg_a]
 
-        self.register[CPU.SP] -= 1 % 255
+        self.register[CPU.SP] -= 1 
         self.ram[self.register[CPU.SP]] = val
 
-        return (2, True)
+        self.pc += 2
+        return (self.pc, True)
 
     def _handle_pop(self):
         reg_a = self.ram_read(self.pc + 1)
@@ -96,7 +106,31 @@ class CPU:
         self.register[reg_a] = val
         self.register[CPU.SP] += 1
 
-        return (2, True)
+        self.pc += 2
+        return (self.pc, True)
+
+    def _handle_call(self):
+        # Grab the value in register that refers to called function
+        reg = self.ram_read(self.pc + 1)
+        # print("reg: ", reg)
+        # Grab next command in op to return to after function
+        next_op = self.pc + 2
+        # Move PC to address in register
+        self.pc = self.register[reg]
+        # print("PC after jumping: ", self.pc)
+        # Push next op to stack
+        self.register[CPU.SP] -= 1
+        self.ram[self.register[CPU.SP]] = next_op
+
+        return (self.pc, True)
+
+    def _handle_ret(self):
+        # Pop value from stack, store as PC
+        # print("Redirecting PC to:", self.ram[self.register[CPU.SP]])
+        self.pc = self.ram[self.register[CPU.SP]]
+        self.register[CPU.SP] += 1
+
+        return (self.pc, True)
 
     def ram_read(self, index):
         return self.ram[index]
@@ -104,16 +138,21 @@ class CPU:
     def ram_write(self, index, value):
         self.ram[index] = value
 
-    def alu(self, op, reg_a, reg_b):
+    def alu(self, op):
         """ALU operations."""
+        reg_a = self.ram_read(self.pc + 1)
+        reg_b = self.ram_read(self.pc + 2)
 
-        if op == "ADD":
+        if op == CPU.ADD:
             self.register[reg_a] += self.register[reg_b]
         # elif op == "SUB": etc
         elif op == CPU.MUL:
             self.register[reg_a] *= self.register[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
+
+        self.pc += 3
+        return (self.pc, True)
 
     def trace(self):
         """
@@ -135,63 +174,68 @@ class CPU:
 
         print()
 
+    def run(self):
+        """Run the CPU."""
+        alu_ops = [CPU.MUL, CPU.ADD]
+        running = True
+
+        while running:
+            ir = self.ram[self.pc]
+
+            # print("PC:", self.pc)
+            # print("IR:", ir)
+            # print("Program: ", self.ram[:32])
+            # print("Stack:", self.ram[240:])
+            # print("Register:", self.register)
+            
+            try:
+                if ir in alu_ops:
+                    output = self.alu(ir)
+                    self.pc = output[0]
+                    running = output[1]
+                else:
+                    output = self.branchtable[ir]()
+                    self.pc = output[0]
+                    running = output[1]
+            
+            except KeyError:
+                print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
+                sys.exit(1)
+
     # def run(self):
     #     """Run the CPU."""
     #     running = True
 
     #     while running:
     #         ir = self.ram[self.pc]
+    #         operand_a = self.ram_read(self.pc+1)
+    #         operand_b = self.ram_read(self.pc+2)
 
-    #         print("PC:", self.pc)
-    #         print("IR:", ir)
-    #         print("Program: ", self.ram[:32])
-    #         print("Stack:", self.ram[240:])
-    #         print("Register:", self.register)
+    #         if ir == CPU.LDI:
+    #             self._handle_ldi()
+
+    #         elif ir == CPU.PRN:
+    #             self._handle_prn()
+
+    #         elif ir == CPU.MUL:
+    #             self.alu(CPU.MUL, operand_a, operand_b)
+    #             self.pc += 3
+
+    #         elif ir == CPU.HLT:
+    #             running = False
             
-    #         try:
-    #             print(self.branchtable[ir]())
-    #             output = self.branchtable[ir]()
-    #             self.pc += output[0]
-    #             running = output[1]
+    #         elif ir == CPU.PUSH:
+    #             val = self.register[operand_a]
+    #             self.register[CPU.SP] -= 1
+    #             self.ram[self.register[CPU.SP]] = val
+    #             self.pc += 2
             
-    #         except KeyError:
+    #         elif ir == CPU.POP:
+    #             val = self.ram[self.register[CPU.SP]]
+    #             self.register[operand_a] = val
+    #             self.register[CPU.SP] += 1
+    #             self.pc += 2
+
+    #         else:
     #             print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
     #             sys.exit(1)
-
-    def run(self):
-        """Run the CPU."""
-        running = True
-
-        while running:
-            ir = self.ram[self.pc]
-            operand_a = self.ram_read(self.pc+1)
-            operand_b = self.ram_read(self.pc+2)
-
-            if ir == CPU.LDI:
-                self._handle_ldi(operand_a, operand_b)
-
-            elif ir == CPU.PRN:
-                self._handle_prn(operand_a)
-
-            elif ir == CPU.MUL:
-                self.alu(CPU.MUL, operand_a, operand_b)
-                self.pc += 3
-
-            elif ir == CPU.HLT:
-                running = False
-            
-            elif ir == CPU.PUSH:
-                val = self.register[operand_a]
-                self.register[CPU.SP] -= 1
-                self.ram[self.register[CPU.SP]] = val
-                self.pc += 2
-            
-            elif ir == CPU.POP:
-                val = self.ram[self.register[CPU.SP]]
-                self.register[operand_a] = val
-                self.register[CPU.SP] += 1
-                self.pc += 2
-
-            else:
-                print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
-                sys.exit(1)
